@@ -1,0 +1,169 @@
+
+NOTICE: Existing SQLite export found: mlp_part2.sqlite
+        It is assumed file was previously exported from: mlp_part2.nsys-rep
+        Consider using --force-export=true if needed.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/nvtx_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain NV Tools Extension (NVTX) data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/osrt_sum.py]... 
+
+ ** OS Runtime Summary (osrt_sum):
+
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)    Med (ns)    Min (ns)   Max (ns)   StdDev (ns)           Name         
+ --------  ---------------  ---------  ----------  -----------  --------  ----------  -----------  ----------------------
+     48.2      10740564206        120  89504701.7  100117513.0      1773   227238180   32861259.5  poll                  
+     45.0      10027391376        940  10667437.6    9567241.0     74991  1672790743   54926650.5  pthread_cond_wait     
+      3.8        841235254       2268    370915.0     375040.5      1563     6760506     306917.0  open64                
+      1.7        377994059       4201     89977.2      56335.0      1001    40974463     663746.8  read                  
+      1.1        242220207        738    328211.7      22307.0      1072    36958971    1526194.7  ioctl                 
+      0.1         23714961         75    316199.5       5651.0      1433    11625939    1873113.8  fopen                 
+      0.1         12653672       4449      2844.2       2115.0      1903       43602       2092.6  munmap                
+      0.1         12364561       4577      2701.5       1482.0      1222     2341274      34824.2  mmap64                
+      0.0          8353226       1607      5198.0       2575.0      1012       40717       4338.2  pthread_cond_signal   
+      0.0          5037245          1   5037245.0    5037245.0   5037245     5037245          0.0  nanosleep             
+      0.0          1849097         12    154091.4     155928.5     73678      257795      65438.5  pthread_create        
+      0.0          1765832          2    882916.0     882916.0    561376     1204456     454726.2  waitpid               
+      0.0          1690048         54     31297.2      24095.5     19436      126347      22973.5  fgets                 
+      0.0           707163         13     54397.2      48942.0     39194       88146      14165.6  sem_timedwait         
+      0.0           690308         26     26550.3      12603.5      2244      130295      33808.4  mmap                  
+      0.0           675311          2    337655.5     337655.5    284085      391226      75760.1  posix_spawn           
+      0.0           567948          9     63105.3      62337.0     57358       76504       5962.2  sleep                 
+      0.0           458170          9     50907.8       3917.0      2835      240833      81679.7  fopen64               
+      0.0           422444         75      5632.6       1523.0      1002      151625      22767.5  fclose                
+      0.0           349698          4     87424.5      59507.0     11301      219383      95674.8  fread                 
+      0.0           129716         16      8107.3       5530.5      2104       23936       7108.7  open                  
+      0.0           118475         19      6235.5       4339.0      3056       16722       3507.1  write                 
+      0.0           102082          3     34027.3      38432.0     16040       47610      16239.4  pthread_rwlock_wrlock 
+      0.0            87875          1     87875.0      87875.0     87875       87875          0.0  pthread_cond_timedwait
+      0.0            46908          1     46908.0      46908.0     46908       46908          0.0  getc                  
+      0.0            26780          3      8926.7      11191.0      3386       12203       4825.0  pipe2                 
+      0.0            26320          1     26320.0      26320.0     26320       26320          0.0  pthread_rwlock_rdlock 
+      0.0            24917          4      6229.3       4468.5      2605       13375       4889.3  pthread_cond_broadcast
+      0.0            23023          2     11511.5      11511.5      3887       19136      10782.7  socket                
+      0.0            17663          1     17663.0      17663.0     17663       17663          0.0  connect               
+      0.0             9578          4      2394.5       2470.0      1583        3055        622.0  fcntl                 
+      0.0             9107          1      9107.0       9107.0      9107        9107          0.0  pthread_mutex_trylock 
+      0.0             6522          4      1630.5       1513.0      1012        2484        679.5  fflush                
+      0.0             5952          1      5952.0       5952.0      5952        5952          0.0  prctl                 
+      0.0             5370          2      2685.0       2685.0      2324        3046        510.5  sigaction             
+      0.0             4188          1      4188.0       4188.0      4188        4188          0.0  bind                  
+      0.0             4017          2      2008.5       2008.5      1182        2835       1168.8  fwrite                
+      0.0             3106          1      3106.0       3106.0      3106        3106          0.0  openat64              
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/cuda_api_sum.py]... 
+
+ ** CUDA API Summary (cuda_api_sum):
+
+ Time (%)  Total Time (ns)  Num Calls  Avg (ns)   Med (ns)   Min (ns)  Max (ns)  StdDev (ns)               Name             
+ --------  ---------------  ---------  ---------  ---------  --------  --------  -----------  ------------------------------
+     80.9        252726386      14246    17740.2     5641.0      3337  16441286     358291.9  cudaLaunchKernel              
+      6.9         21663544       1193    18158.9     7284.0      3897     90660      14033.3  cudaMemcpyAsync               
+      5.8         18151606       1187    15292.0     9558.0      3086     56717       8336.7  cudaStreamSynchronize         
+      4.3         13514742          4  3378685.5  4128866.5    823549   4433460    1711104.3  cuLibraryLoadData             
+      0.7          2138752         10   213875.2   149747.0      2434    677554     218131.9  cudaMalloc                    
+      0.7          2135376          2  1067688.0  1067688.0      2254   2133122    1506751.2  cudaFree                      
+      0.5          1504450          2   752225.0   752225.0     17152   1487298    1039550.2  cudaHostAlloc                 
+      0.1           229126         36     6364.6      260.0       230    207410      34474.2  cudaEventCreateWithFlags      
+      0.1           218647        810      269.9      141.0        70     30427       1481.8  cuGetProcAddress_v2           
+      0.0            21270          4     5317.5     2775.0      2284     13436       5420.9  cudaStreamIsCapturing_v10000  
+      0.0             4328          3     1442.7     1483.0       992      1853        431.9  cuInit                        
+      0.0             3357          4      839.3      656.5       501      1543        482.6  cuLibraryGetKernel            
+      0.0             1493          3      497.7      381.0       121       991        446.6  cuModuleGetLoadingMode        
+      0.0              772          2      386.0      386.0       281       491        148.5  cudaGetDriverEntryPoint_v11030
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+
+ ** CUDA GPU Kernel Summary (cuda_gpu_kern_sum):
+
+ Time (%)  Total Time (ns)  Instances  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)                                                  Name                                                
+ --------  ---------------  ---------  --------  --------  --------  --------  -----------  ----------------------------------------------------------------------------------------------------
+     20.5         17880191       1644   10876.0   12192.0      7328     15072       2061.1  ampere_sgemm_32x32_sliced1x4_tn                                                                     
+     16.1         14104665        937   15053.0   15584.0     14208     16128        731.8  void at::native::<unnamed>::multi_tensor_apply_kernel<at::native::<unnamed>::TensorListMetadata<(in…
+      8.4          7346991        939    7824.3    7808.0      7137      8832        127.4  ampere_sgemm_32x32_sliced1x4_nt                                                                     
+      7.9          6900418        938    7356.5    7536.0      6112      8096        572.0  void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<float, at::native::func_wrapp…
+      6.4          5551353        468   11861.9   11871.0     11775     12000         39.9  void at::native::<unnamed>::multi_tensor_apply_kernel<at::native::<unnamed>::TensorListMetadata<(in…
+      6.0          5257664        469   11210.4   11232.0      9728     11456        141.8  void at::native::reduce_kernel<(int)256, (int)2, at::native::ReduceOp<float, at::native::func_wrapp…
+      4.8          4226481        468    9030.9    9024.0      8960      9120         27.0  ampere_sgemm_64x32_sliced1x4_nt                                                                     
+      4.3          3759001       1647    2282.3    2304.0      2111      2624         87.1  void at::native::vectorized_elementwise_kernel<(int)4, at::native::<unnamed>::launch_clamp_scalar(a…
+      4.2          3660680        469    7805.3    7808.0      7775      8128         28.1  ampere_sgemm_32x32_sliced1x4_nn                                                                     
+      3.7          3233758       1407    2298.3    2304.0      2175      2432         61.3  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, floa…
+      2.9          2549612        469    5436.3    5440.0      5407      5473         14.5  ampere_sgemm_128x32_nn                                                                              
+      2.8          2421968        548    4419.6    4352.5      2751      5184        290.8  void at::native::<unnamed>::nll_loss_forward_reduce_cuda_kernel_2d<float, float, long>(T1 *, T1 *, …
+      2.4          2086008        549    3799.7    3809.0      3615      3872         65.5  void cublasLt::splitKreduce_kernel<(int)32, (int)16, int, float, float, float, (bool)0, float, floa…
+      2.0          1738506        938    1853.4    1856.0      1759      1921         42.6  void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<float>, std::array<c…
+      1.9          1641810        469    3500.7    3520.0      3137      3807         51.5  void at::native::<unnamed>::nll_loss_backward_reduce_cuda_kernel_2d<float, long>(T1 *, const T1 *, …
+      1.7          1456379        549    2652.8    2688.0      2528      2721         57.4  void <unnamed>::softmax_warp_forward<float, float, float, (int)4, (bool)0, (bool)0>(T2 *, const T1 …
+      1.3          1103898        469    2353.7    2368.0      2240      2464         58.6  void <unnamed>::softmax_warp_backward<float, float, float, (int)4, (bool)0, (bool)0>(T2 *, const T1…
+      1.2          1009715        469    2152.9    2144.0      2111      2272         29.8  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, floa…
+      0.6           499647         79    6324.6    6336.0      5824      6496         85.4  void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MaxOps<flo…
+      0.4           365952         79    4632.3    4609.0      4256      4768         76.4  void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<long, at::native::func_wrappe…
+      0.2           205793         79    2605.0    2592.0      2528      2720         58.3  void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIterator…
+      0.2           166782         79    2111.2    2080.0      2048      2209         57.8  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<long, long, bool, …
+      0.2           164256         78    2105.8    2080.0      2016      2177         58.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<long>, std::arra…
+      0.0            11488          1   11488.0   11488.0     11488     11488          0.0  ampere_sgemm_32x128_tn                                                                              
+      0.0             9184          1    9184.0    9184.0      9184      9184          0.0  ampere_sgemm_64x32_sliced1x4_tn                                                                     
+      0.0             6368          1    6368.0    6368.0      6368      6368          0.0  void gemmSN_TN_kernel<float, (int)128, (int)16, (int)2, (int)4, (int)8, (int)9, (bool)0, cublasGemv…
+      0.0             2464          1    2464.0    2464.0      2464      2464          0.0  void at::native::unrolled_elementwise_kernel<at::native::AUnaryFunctor<float, float, float, at::nat…
+      0.0             2048          1    2048.0    2048.0      2048      2048          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BUnaryFunctor<float, float, floa…
+      0.0             2048          1    2048.0    2048.0      2048      2048          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctorOnSelf_add<long>, std…
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/cuda_gpu_mem_time_sum.py]... 
+
+ ** CUDA GPU MemOps Summary (by Time) (cuda_gpu_mem_time_sum):
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)            Operation           
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ------------------------------
+     98.5         10600761   1104    9602.1    4368.0      1152     34432       8298.6  [CUDA memcpy Host-to-Device]  
+      1.4           151969     83    1831.0    1760.0      1663      4640        408.9  [CUDA memcpy Device-to-Host]  
+      0.1            13440      6    2240.0    2128.0      1952      2880        346.4  [CUDA memcpy Device-to-Device]
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/cuda_gpu_mem_size_sum.py]... 
+
+ ** CUDA GPU MemOps Summary (by Size) (cuda_gpu_mem_size_sum):
+
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)            Operation           
+ ----------  -----  --------  --------  --------  --------  -----------  ------------------------------
+    221.423   1104     0.201     0.003     0.000     0.803        0.201  [CUDA memcpy Host-to-Device]  
+      0.941      6     0.157     0.003     0.000     0.803        0.321  [CUDA memcpy Device-to-Device]
+      0.000     83     0.000     0.000     0.000     0.000        0.000  [CUDA memcpy Device-to-Host]  
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/openmp_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain OpenMP event data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/opengl_khr_range_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain KHR Extension (KHR_DEBUG) data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/opengl_khr_gpu_range_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain GPU KHR Extension (KHR_DEBUG) data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/vulkan_marker_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain Vulkan Debug Extension (Vulkan Debug Util) data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/vulkan_gpu_marker_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain GPU Vulkan Debug Extension (GPU Vulkan Debug markers) data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/dx11_pix_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain DX11 CPU debug markers.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/dx12_gpu_marker_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain DX12 GPU debug markers.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/dx12_pix_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain DX12 CPU debug markers.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/wddm_queue_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain WDDM context data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/um_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain CUDA Unified Memory CPU page faults data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/um_total_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain CUDA Unified Memory CPU page faults data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/um_cpu_page_faults_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain CUDA Unified Memory CPU page faults data.
+
+Processing [mlp_part2.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/openacc_sum.py]... 
+SKIPPED: mlp_part2.sqlite does not contain OpenACC event data.
+

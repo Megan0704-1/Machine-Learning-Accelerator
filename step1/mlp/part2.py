@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-e", "--epochs", type=int, default=5)
 parser.add_argument("-b", "--batch", type=int, default=1)
 parser.add_argument("-d", "--device", type=str, default="cpu")
+parser.add_argument("-w", "--workload", type=str, default="inference")
 args = parser.parse_args()
 
 n_epochs = args.epochs  # Number of Epochs for training TODO: Change the epochs to 1 for profiling
@@ -172,10 +173,11 @@ print(f"Running on device: {device}")
 network.to(device)
 
 total_time = 0
-# for epoch in range(1, n_epochs + 1):
-#     time_per_epoch = train(epoch)
-#     total_time = total_time + time_per_epoch
-#     test()
+if args.workload == "train":
+    for epoch in range(1, n_epochs + 1):
+        time_per_epoch = train(epoch)
+        total_time = total_time + time_per_epoch
+        test()
 
 print("Total Training time: {}".format(total_time))
 
