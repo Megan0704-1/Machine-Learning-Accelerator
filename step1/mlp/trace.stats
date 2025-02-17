@@ -1,0 +1,18 @@
+
+NOTICE: Existing SQLite export found: mlp_1000.sqlite
+        It is assumed file was previously exported from: mlp_1000.nsys-rep
+        Consider using --force-export=true if needed.
+
+Processing [mlp_1000.sqlite] with [/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/cuda-12.6.1-cf4xlcbcfpwchqwo5bktxyhjagryzcx6/nsight-systems-2024.4.2/host-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+
+ ** CUDA GPU Kernel Summary (cuda_gpu_kern_sum):
+
++----------+-----------------+-----------+----------+----------+----------+----------+-------------+------------------------------------------------------------------------------------------------------+
+| Time (%) | Total Time (ns) | Instances | Avg (ns) | Med (ns) | Min (ns) | Max (ns) | StdDev (ns) |                                                 Name                                                 |
++----------+-----------------+-----------+----------+----------+----------+----------+-------------+------------------------------------------------------------------------------------------------------+
+|     72.3 |           35840 |         3 |  11946.7 |  12512.0 |     8672 |    14656 |      3031.8 | ampere_sgemm_32x32_sliced1x4_tn                                                                      |
+|     14.5 |            7168 |         3 |   2389.3 |   2304.0 |     2272 |     2592 |       176.2 | void at::native::vectorized_elementwise_kernel<(int)4, at::native::<unnamed>::launch_clamp_scalar(a… |
+|      7.9 |            3904 |         1 |   3904.0 |   3904.0 |     3904 |     3904 |         0.0 | void cublasLt::splitKreduce_kernel<(int)32, (int)16, int, float, float, float, (bool)0, float, floa… |
+|      5.4 |            2688 |         1 |   2688.0 |   2688.0 |     2688 |     2688 |         0.0 | void <unnamed>::softmax_warp_forward<float, float, float, (int)4, (bool)0, (bool)0>(T2 *, const T1 … |
++----------+-----------------+-----------+----------+----------+----------+----------+-------------+------------------------------------------------------------------------------------------------------+
+
