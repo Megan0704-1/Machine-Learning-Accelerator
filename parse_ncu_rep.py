@@ -35,6 +35,27 @@ def main():
         "sm__sass_thread_inst_executed_ops_fadd_fmul_ffma_pred_on.sum",
         "dram__bytes_read.sum",
         "dram__bytes_write.sum",
+        "sm__ops_path_tensor_src_bf16_dst_fp32.sum",
+        "sm__ops_path_tensor_src_bf16_dst_fp32_sparsity_off.sum",
+        "sm__ops_path_tensor_src_bf16_dst_fp32_sparsity_on.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp16.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp16_sparsity_off.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp16_sparsity_on.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp32.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp32_sparsity_off.sum",
+        "sm__ops_path_tensor_src_fp16_dst_fp32_sparsity_on.sum",
+        "sm__ops_path_tensor_src_fp64.sum",
+        "sm__ops_path_tensor_src_int1.sum",
+        "sm__ops_path_tensor_src_int4.sum",
+        "sm__ops_path_tensor_src_int4_sparsity_off.sum",
+        "sm__ops_path_tensor_src_int4_sparsity_on.sum",
+        "sm__ops_path_tensor_src_int8.sum",
+        "sm__ops_path_tensor_src_int8_sparsity_off.sum",
+        "sm__ops_path_tensor_src_int8_sparsity_on.sum",
+        "sm__ops_path_tensor_src_tf32_dst_fp32.sum",
+        "sm__ops_path_tensor_src_tf32_dst_fp32_sparsity_off.sum",
+        "sm__ops_path_tensor_src_tf32_dst_fp32_sparsity_on.sum",
+        "sm__sass_thread_inst_executed_ops_fadd_fmul_ffma_pred_on.sum"
     ]
 
     raw_metrics = {}

@@ -1,0 +1,27 @@
+metrics_str = """sm__ops_path_tensor_src_bf16_dst_fp32,
+sm__ops_path_tensor_src_bf16_dst_fp32_sparsity_off,
+sm__ops_path_tensor_src_bf16_dst_fp32_sparsity_on,
+sm__ops_path_tensor_src_fp16_dst_fp16,
+sm__ops_path_tensor_src_fp16_dst_fp16_sparsity_off,
+sm__ops_path_tensor_src_fp16_dst_fp16_sparsity_on,
+sm__ops_path_tensor_src_fp16_dst_fp32,
+sm__ops_path_tensor_src_fp16_dst_fp32_sparsity_off,
+sm__ops_path_tensor_src_fp16_dst_fp32_sparsity_on,
+sm__ops_path_tensor_src_fp64,
+sm__ops_path_tensor_src_int1,
+sm__ops_path_tensor_src_int4,
+sm__ops_path_tensor_src_int4_sparsity_off,
+sm__ops_path_tensor_src_int4_sparsity_on,
+sm__ops_path_tensor_src_int8,
+sm__ops_path_tensor_src_int8_sparsity_off,
+sm__ops_path_tensor_src_int8_sparsity_on,
+sm__ops_path_tensor_src_tf32_dst_fp32,
+sm__ops_path_tensor_src_tf32_dst_fp32_sparsity_off,
+sm__ops_path_tensor_src_tf32_dst_fp32_sparsity_on,
+sm__sass_thread_inst_executed_ops_fadd_fmul_ffma_pred_on"""
+
+metrics_list = [m.strip() for m in metrics_str.split(",")]
+print("[")
+for metric in metrics_list:
+    print(f"\"{metric}.sum\",")
+print("]")
