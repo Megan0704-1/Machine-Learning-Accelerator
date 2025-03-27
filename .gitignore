@@ -1,0 +1,6 @@
+tags
+*.gz
+*.pth
+speech_commands/
+.DS_*
+data/
