@@ -14,8 +14,8 @@ def create_optimizer(model, learning_rate, optim_type='adam'):
         return optim.SGD(model.parameters(), lr=learning_rate, momentum=0.7)
     else:
         raise ValueError("Invalid optim_type=%s" % optim_type)
-    
-    
+
+
 def get_likely_index(tensor):
     # Find most likely label index for each element in the batch
     return tensor.argmax(dim=-1)
@@ -61,13 +61,13 @@ def plot_acc(test_loader, model, audio_processor, device, which_set='testing',
     correct_list, total_list = test_model(
         model, test_loader, audio_processor, model_type=model_type, device=device)
     title = f'{which_set} accuracy for {model_name}'
-    plot_test_results(correct_list, total_list, audio_processor, title)  
+    plot_test_results(correct_list, total_list, audio_processor, title)
     return sum(correct_list) / sum(total_list)
 
 
 def test_model(model, test_loader, audio_processor, model_type="float", device='cpu'):
     assert model_type in ["float", "half", "double"], f"model type {model_type} is not supported"
-    model = copy.deepcopy(model)
+    # model = copy.deepcopy(model)
     if model_type == "float":
         model.float()
     elif model_type == "double":
@@ -136,7 +136,7 @@ def train(model, loaders, optimizer, epoch, device,
 
         # Record loss
         losses.append(loss.item())
-    
+
     acc = test(valid_loader, model, device, epoch=epoch,
                loader_type='Validation', verbose=verbose)
     print(f'Val Acc Epoch {epoch} = {round(acc,2)}%, Train loss = {round(sum(losses)/len(losses),3)}')

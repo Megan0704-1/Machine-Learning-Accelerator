@@ -252,25 +252,26 @@ class QConfig(object):
         """
 
         max_val = 0
+
         with torch.no_grad():
             if self.is_symmetric:
                 # symmetric has scale based on max absolute, and 0 for zp
                 max_val = 2 ** (self.quant_bits - 1) -1
                 pre_scale = torch.max(torch.abs(saturation_min), torch.abs(saturation_max))
-                scale = pre_scale / max_val
-                zero_point = torch.tensor(0, dtype=torch.int32)
+                scale = (pre_scale / max_val).detach().clone()
+                zero_point = torch.tensor(0, dtype=torch.int32, device=saturation_max.device)
             else:
                 # asymmetric scale and zp based on min max
                 max_val = 2 ** self.quant_bits - 1
-                scale = (saturation_max - saturation_min) / max_val
+                scale = ((saturation_max - saturation_min) / max_val).detach().clone()
                 zero_point = torch.round(saturation_min * -1 / scale)
                 zero_point = torch.clamp(zero_point, min=0, max=max_val)
-                zero_point = zero_point.to(torch.int32)
+                zero_point = zero_point.to(torch.int32).detach().clone()
 
         self.prev_scale = scale
         self.prev_zeropoint = zero_point
-        self.prev_min = saturation_min
-        self.prev_max = saturation_max
+        self.prev_min = saturation_min.detach().clone()
+        self.prev_max = saturation_max.detach().clone()
 
         return scale, zero_point
 
@@ -289,14 +290,21 @@ class QConfig(object):
         """
         Calculate quantized value given float value, saturation_min, and saturation_max
         """
+        if not isinstance(saturation_min, torch.Tensor):
+            saturation_min = torch.tensor(saturation_min, device=x.device1)
+        if not isinstance(saturation_max, torch.Tensor):
+            saturation_max = torch.tensor(saturation_max, device=x.device1)
+
         # Compute scale and zeropoint for quantization
         scale, zero_point = self.get_quantization_params(saturation_min, saturation_max)
+
         # Update and store min and max
-        self.prev_min = saturation_min
-        self.prev_max = saturation_max
+        self.prev_min = saturation_min.detach().clone()
+        self.prev_max = saturation_max.detach().clone()
+
         # Update and store computed scale and zero_point
-        self.prev_scale = scale
-        self.prev_zeropoint = zero_point
+        self.prev_scale = scale.detach().clone()
+        self.prev_zeropoint = zero_point.detach().clone()
 
         x_q = self.quantize_with_params(
             x, scale, zero_point, fake_quantize=fake_quantize
@@ -330,7 +338,8 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
     set to False during testing and validation
     """
     x_transform = x.data.detach()
-    prev_x_min, prev_x_max = qconfig.prev_min, qconfig.prev_max
+    prev_x_min = qconfig.prev_min if isinstance(qconfig.prev_min, torch.Tensor) else None
+    prev_x_max = qconfig.prev_max if isinstance(qconfig.prev_max, torch.Tensor) else None
 
     if is_moving_avg:
         x_min, x_max = get_moving_avg_min_max(
@@ -351,6 +360,9 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
         )
 
     # Get quantized activations and update scale, zero_point, min, and max of qconfig
+    x_min = x_min.detach().clone()
+    x_max = x_max.detach().clone()
+
     x_q = qconfig.quantize_with_min_max(x, x_min, x_max, fake_quantize=fake_quantize)
     return x_q
 
