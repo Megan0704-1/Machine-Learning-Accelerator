@@ -4,3 +4,4 @@ tags
 speech_commands/
 .DS_*
 data/
+__pycache__
