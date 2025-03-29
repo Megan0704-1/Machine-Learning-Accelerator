@@ -403,6 +403,8 @@ def conv2d_uniform_quantized(module, x, a_qconfig=None, w_qconfig=None, b_qconfi
         min_val = -2**31; max_val = 2**31-1
         bias_scale = a_qconfig.prev_scale * w_qconfig.prev_scale
         b_q = torch.round(module.bias / bias_scale).clamp(min_val, max_val) * bias_scale
+        b_qconfig.prev_scale = bias_scale
+        b_qconfig.prev_zeropoint = 0
     else:
         b_q = None
 
