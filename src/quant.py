@@ -2,6 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 
 # Round function
@@ -23,7 +24,7 @@ class ste_round(torch.autograd.Function):
 
 # Get percnetile min max
 def get_percentile_min_max(
-    input, lower_percentile, upper_percentile, output_tensor=False
+    input_, lower_percentile, upper_percentile, output_tensor=False
 ):
     """
     Calculate the percentile max and min values in a given tensor
@@ -40,21 +41,19 @@ def get_percentile_min_max(
     output_tensor: bool, default False
         if True, this function returns tensors, otherwise it returns values
     """
-    input_length = input.shape[0]
+    flat_input = input_.view(-1)
+    input_length = flat_input.shape[0]
 
-    lower_index = round(input_length * (1 - lower_percentile * 0.01))
-    upper_index = round(input_length * upper_percentile * 0.01)
+    lower_index = max(1, int(math.ceil(input_length * (lower_percentile * 0.01))))
+    lower_bound = torch.kthvalue(flat_input, k=lower_index).values
 
-    upper_bound = torch.kthvalue(input, k=upper_index).values
-
-    if lower_percentile == 0:
-        lower_bound = upper_bound * 0
-    else:
-        lower_bound = -torch.kthvalue(-input, k=lower_index).values
+    upper_index = min(input_length, int(math.ceil(input_length * (upper_percentile * 0.01))))
+    upper_bound = torch.kthvalue(flat_input, k=upper_index).values
 
     if not output_tensor:
         lower_bound = lower_bound.item()
         upper_bound = upper_bound.item()
+
     return lower_bound, upper_bound
 
 
@@ -68,7 +67,7 @@ def uniform_quantize(input, scale, zero_point):
     scale: scaling factor for quantization
     zero_pint: shift for quantization
     """
-    output = torch.round(input / scale) + zero_point
+    output = torch.round(input / scale ) + zero_point
     return output
 
 
@@ -146,14 +145,13 @@ class SymmetricQuantFunction(torch.autograd.Function):
         # For symmetric quantization, zero point should be zero.
         zero_point = 0
 
-        max_val_pos = 2 ** (k-1) - 1
-        min_val_neg = -2 ** (k-1)
+        max_val_pos = (2 ** (k-1)) - 1
+        min_val_neg = -(2 ** (k-1))
 
-        scaled_x = torch.round(x / ctx.scale + zero_point)
+        scaled_x = torch.round(x / ctx.scale)  + zero_point
         clipped_x = torch.clamp(scaled_x, min=min_val_neg, max=max_val_pos)
 
-        # dq becuase is fake quant
-        output = (clipped_x - zero_point) * ctx.scale
+        output = clipped_x
 
         # mask keep track of clipped pos
         mask = (scaled_x >= min_val_neg) & (scaled_x <= max_val_pos)
@@ -164,8 +162,8 @@ class SymmetricQuantFunction(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         mask, = ctx.saved_tensors
-        grad_input = grad_output.clone() / ctx.scale
-        grad_input *= mask
+        grad_input = grad_output.clone()
+        grad_input[~mask] = 0
         return grad_input, None, None, None
 
 
@@ -199,9 +197,9 @@ class AsymmetricQuantFunction(torch.autograd.Function):
         else:
             raise ValueError("The QuantFunction requires a pre-calculated zero point")
 
-        scaled_x = torch.round(x / ctx.scale + zero_point)
+        scaled_x = torch.round(x / scale + zero_point)
         clipped = torch.clamp(scaled_x, min=0, max=(2**k)-1)
-        output = (clipped-zero_point) * ctx.scale
+        output = clipped
 
         mask = (scaled_x >= 0) & (scaled_x <= (2**k)-1)
         ctx.save_for_backward(mask)
@@ -211,8 +209,8 @@ class AsymmetricQuantFunction(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         mask, = ctx.saved_tensors
-        grad_input = grad_output.clone() / ctx.scale
-        grad_input *= mask
+        grad_input = grad_output.clone()
+        grad_input[~mask] = 0
         return grad_input, None, None, None
 
 
@@ -273,6 +271,7 @@ class QConfig(object):
         self.prev_min = saturation_min.detach().clone()
         self.prev_max = saturation_max.detach().clone()
 
+        # print(f"get quant params: {scale}, {zeropoint}")
         return scale, zero_point
 
     def quantize_with_params(self, x, scale, zero_point, fake_quantize=False):
@@ -281,7 +280,12 @@ class QConfig(object):
         """
         x_q = self.quantize_function(x, self.quant_bits, scale, zero_point)
         if fake_quantize:
-            x_q = (x_q - zero_point) * scale
+            if self.is_symmetric:
+                x_q = x_q * scale
+            else:
+                x_q = (x_q - zero_point) * scale
+
+        # print(f"quantize with params: {x_q}")
         return x_q
 
     def quantize_with_min_max(
@@ -291,24 +295,18 @@ class QConfig(object):
         Calculate quantized value given float value, saturation_min, and saturation_max
         """
         if not isinstance(saturation_min, torch.Tensor):
-            saturation_min = torch.tensor(saturation_min, device=x.device1)
+            saturation_min = torch.tensor(saturation_min, device=x.device)
         if not isinstance(saturation_max, torch.Tensor):
-            saturation_max = torch.tensor(saturation_max, device=x.device1)
+            saturation_max = torch.tensor(saturation_max, device=x.device)
 
         # Compute scale and zeropoint for quantization
         scale, zero_point = self.get_quantization_params(saturation_min, saturation_max)
 
-        # Update and store min and max
-        self.prev_min = saturation_min.detach().clone()
-        self.prev_max = saturation_max.detach().clone()
-
-        # Update and store computed scale and zero_point
-        self.prev_scale = scale.detach().clone()
-        self.prev_zeropoint = zero_point.detach().clone()
-
         x_q = self.quantize_with_params(
             x, scale, zero_point, fake_quantize=fake_quantize
         )
+
+        # print(f"quant with min max: {x_q}")
         return x_q
 
     def quantize_with_prev_params(self, x, fake_quantize=False):
@@ -338,30 +336,32 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
     set to False during testing and validation
     """
     x_transform = x.data.detach()
-    prev_x_min = qconfig.prev_min if isinstance(qconfig.prev_min, torch.Tensor) else None
-    prev_x_max = qconfig.prev_max if isinstance(qconfig.prev_max, torch.Tensor) else None
 
     if is_moving_avg:
+        prev_min = qconfig.prev_min
+        prev_max = qconfig.prev_max
+        if prev_min is not None and prev_max is not None:
+            prev_min = prev_min.to(x.device)
+            prev_max = prev_max.to(x.device)
+        else:
+            prev_min, prev_max = None, None
+
         x_min, x_max = get_moving_avg_min_max(
             x_transform,
-            prev_x_min,
-            prev_x_max,
+            prev_min,
+            prev_max,
             act_percentile=99.9,
             is_symmetric=qconfig.is_symmetric,
         )
 
     else:
-        x_min, x_max = get_moving_avg_min_max(
-            x_transform,
-            None,
-            None,
-            act_percentile=99.9,
-            is_symmetric=qconfig.is_symmetric,
-        )
-
-    # Get quantized activations and update scale, zero_point, min, and max of qconfig
-    x_min = x_min.detach().clone()
-    x_max = x_max.detach().clone()
+        # no moving avg
+        if qconfig.prev_min is not None and qconfig.prev_max is not None:
+            x_min = qconfig.prev_min.clone().to(x.device)
+            x_max = qconfig.prev_max.clone().to(x.device)
+        else:
+            x_min = x_transform.min()
+            x_max = x_transform.max()
 
     x_q = qconfig.quantize_with_min_max(x, x_min, x_max, fake_quantize=fake_quantize)
     return x_q
@@ -371,10 +371,26 @@ def quantize_weights_bias(w, qconfig, fake_quantize=False):
     """
     Return quantized weights calculated using given qconfig.
     """
+    w_transform = w.data.detach()
 
-    scale, zp = qconfig.get_quantization_params(w.min(), w.max())
+    if fake_quantize or qconfig.prev_scale is None or qconfig.prev_zeropoint is None:
+        scale, zp = qconfig.get_quantization_params(w.min(), w.max())
+    else:
+        scale = qconfig.prev_scale
+        zp = qconfig.prev_zeropoint
+
     # apply quantization to weights and biases
+    # print(w)
+    # print(f"scale: {scale}")
+    # print(f"zp: {zp}")
     w_q = qconfig.quantize_function(w, qconfig.quant_bits, scale, zp)
+
+    if fake_quantize:
+        if qconfig.is_symmetric:
+            w_q = w_q * scale
+        else:
+            w_q = (w_q - zp) * scale
+
     return w_q
 
 
@@ -391,41 +407,57 @@ def conv2d_uniform_quantized(module, x, a_qconfig=None, w_qconfig=None, b_qconfi
     if module.bias is not None:
         assert b_qconfig is not None
 
-    if a_qconfig.prev_scale is None:
-        a_qconfig.get_quantization_params(x.min(), x.max())
+    is_training = module.training
+    a_out_qconfig = a_qconfig.copy()
+    
+    # fake quant the input
+    x_q = quantize_activations(x, a_qconfig, is_moving_avg = is_training, fake_quantize=True)
 
     # fake quant weight
+    # print(f"weight before quant: {module.weight}")
     w_q = quantize_weights_bias(module.weight, w_qconfig, fake_quantize=True)
+    # print(f"weight after quant: {w_q}")
 
     b_q = None
     # bias scale int32
+    
     if module.bias is not None:
+        # print(f"before bias: {module.bias}")
+        if a_qconfig.prev_scale is None or w_qconfig.prev_scale is None:
+            _ = quantize_activations(x, a_qconfig, is_training, is_training)
+            _ = quantize_weights_bias(module.weight, w_qconfig, is_training)
+
         min_val = -2**31; max_val = 2**31-1
         bias_scale = a_qconfig.prev_scale * w_qconfig.prev_scale
-        b_q = torch.round(module.bias / bias_scale).clamp(min_val, max_val) * bias_scale
+        b_q = torch.round(module.bias / bias_scale).clamp(min_val, max_val)
+        b_q *= bias_scale
+
         b_qconfig.prev_scale = bias_scale
         b_qconfig.prev_zeropoint = 0
+        # print(f"after bias: {b_q}")
+        # print(f"scale: {bias_scale}")
+        
     else:
         b_q = None
+
 
     # forward with fp32
     if isinstance(module, nn.Conv2d):
         y = F.conv2d(
-            x, w_q, b_q, module.stride, module.padding, module.dilation, module.groups
+            x_q, w_q, b_q, module.stride, module.padding, module.dilation, module.groups
         )
     else:
         #linear
-        y = F.linear(x, w_q, b_q)
+        y = F.linear(x_q, w_q, b_q)
 
-    # fake quant output
-    y_q = quantize_activations(y, a_qconfig, is_moving_avg=True, fake_quantize=True)
+    y_q = quantize_activations(y, a_out_qconfig, is_moving_avg=is_training, fake_quantize=True)
 
     return y_q
 
 
 class QuantWrapper(nn.Module):
     def __init__(self, module, a_qconfig, w_qconfig, b_qconfig):
-        super(QuantWrapper, self).__init__()
+        nn.Module.__init__(self)
         self.a_qconfig = a_qconfig
         self.w_qconfig = w_qconfig
         self.b_qconfig = b_qconfig
