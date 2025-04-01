@@ -71,6 +71,29 @@ def uniform_quantize(input, scale, zero_point):
     return output
 
 
+#####################
+
+def get_clamped_min_max(input_, lower_percentile=0.0, upper_percentile=100.0):
+    """
+    Clamps the input using the given percentile range and returns the
+    min and max of the clipped distribution.
+    Example usage: get_clamped_min_max(x, 0.0, 99.9)
+    """
+    flat_input = input_.view(-1)
+    if lower_percentile <= 0.0 and upper_percentile >= 100.0:
+        return flat_input.min(), flat_input.max()
+
+    input_length = flat_input.shape[0]
+    lower_index = max(1, int(math.ceil(input_length * (lower_percentile * 0.01))))
+    upper_index = min(input_length, int(math.ceil(input_length * (upper_percentile * 0.01))))
+
+    sorted_input, _ = torch.sort(flat_input)
+    clipped_min = sorted_input[lower_index - 1]
+    clipped_max = sorted_input[upper_index - 1]
+
+    clipped = torch.clamp(flat_input, min=clipped_min, max=clipped_max)
+    return clipped.min(), clipped.max()
+
 def get_moving_avg_min_max(
     x,
     prev_x_min,
@@ -79,40 +102,32 @@ def get_moving_avg_min_max(
     act_range_momentum=0.95,
     is_symmetric=False,
 ):
-    if act_percentile == 0.0:
-        x_min = x.data.min()
-        x_max = x.data.max()
-    elif is_symmetric:
-        x_min, x_max = get_percentile_min_max(
-            x.detach().view(-1),
-            100 - act_percentile,
-            act_percentile,
-            output_tensor=True,
-        )
-    # Note that our asymmetric quantization is implemented using scaled unsigned
-    # integers without zero_points, that is to say our asymmetric quantization
-    # should always be after ReLU, which makes the minimum value to be always 0.
-    # As a result, if we use percentile mode for asymmetric quantization, the
-    # lower_percentile will be set to 0 in order to make sure the final x_min is 0.
-    elif not is_symmetric:
-        x_min, x_max = get_percentile_min_max(
-            x.detach().view(-1), 0, act_percentile, output_tensor=True
-        )
-
-    # Initialization
-    if prev_x_min is None or prev_x_max is None:
-        new_x_min = x_min
-        new_x_max = x_max
-    elif prev_x_min == prev_x_max:
-        new_x_min = prev_x_min + x_min
-        new_x_max = prev_x_max + x_max
-    # use momentum to update the quantization range
-    elif act_range_momentum == -1:
-        new_x_min = min(prev_x_min, x_min)
-        new_x_max = max(prev_x_max, x_max)
+    """
+    Use exponential moving average to track min/max range,
+    plus optional percentile-based clamping to avoid outliers.
+    """
+    if act_percentile > 0.0:
+        current_min, current_max = get_clamped_min_max(x, 0.0 if not is_symmetric else (100-act_percentile), act_percentile)
     else:
-        new_x_min = prev_x_min * act_range_momentum + x_min * (1 - act_range_momentum)
-        new_x_max = prev_x_max * act_range_momentum + x_max * (1 - act_range_momentum)
+        current_min = x.min()
+        current_max = x.max()
+
+    if is_symmetric:
+        abs_max = max(current_max.abs(), current_min.abs())
+        current_min = -abs_max
+        current_max = abs_max
+
+    if prev_x_min is None or prev_x_max is None:
+        new_x_min = current_min
+        new_x_max = current_max
+    else:
+        if act_range_momentum < 0:
+            new_x_min = min(prev_x_min, current_min)
+            new_x_max = max(prev_x_max, current_max)
+        else:
+            new_x_min = prev_x_min * act_range_momentum + current_min * (1 - act_range_momentum)
+            new_x_max = prev_x_max * act_range_momentum + current_max * (1 - act_range_momentum)
+
     return new_x_min, new_x_max
 
 
@@ -140,7 +155,6 @@ class SymmetricQuantFunction(torch.autograd.Function):
             raise ValueError(
                 "The QuantFunction requires a pre-calculated scaling factor"
             )
-        ctx.scale = scale
 
         # For symmetric quantization, zero point should be zero.
         zero_point = 0
@@ -148,21 +162,23 @@ class SymmetricQuantFunction(torch.autograd.Function):
         max_val_pos = (2 ** (k-1)) - 1
         min_val_neg = -(2 ** (k-1))
 
-        scaled_x = torch.round(x / ctx.scale)  + zero_point
-        clipped_x = torch.clamp(scaled_x, min=min_val_neg, max=max_val_pos)
+        x_scale = x / scale
+        x_round = ste_round.apply(x_scale)  + zero_point
+        x_clip = torch.clamp(x_round, min=min_val_neg, max=max_val_pos)
 
-        output = clipped_x
+        output = x_clip
 
-        # mask keep track of clipped pos
-        mask = (scaled_x >= min_val_neg) & (scaled_x <= max_val_pos)
+        ctx.bits = k
+        mask = (x_round >= min_val_neg) & (x_round <= max_val_pos)
         ctx.save_for_backward(mask)
 
         return output
 
     @staticmethod
     def backward(ctx, grad_output):
-        mask, = ctx.saved_tensors
+        (mask,) = ctx.saved_tensors
         grad_input = grad_output.clone()
+
         grad_input[~mask] = 0
         return grad_input, None, None, None
 
@@ -190,25 +206,30 @@ class AsymmetricQuantFunction(torch.autograd.Function):
             raise ValueError(
                 "The QuantFunction requires a pre-calculated scaling factor"
             )
-        ctx.scale = scale
 
         if specified_zero_point is not None:
             zero_point = specified_zero_point
         else:
             raise ValueError("The QuantFunction requires a pre-calculated zero point")
 
-        scaled_x = torch.round(x / scale + zero_point)
-        clipped = torch.clamp(scaled_x, min=0, max=(2**k)-1)
-        output = clipped
+        x_scale = x / scale + zero_point
+        x_round = ste_round.apply(x_scale)
+        x_clip = torch.clamp(x_round, min=0, max=(2**k)-1)
+        output = x_clip
 
-        mask = (scaled_x >= 0) & (scaled_x <= (2**k)-1)
+        qmin = 0
+        qmax = (2**k) - 1
+        ctx.qmin = qmin
+        ctx.qmax = qmax
+
+        mask = (x_round >= qmin) & (x_round <= qmax)
         ctx.save_for_backward(mask)
 
         return output
 
     @staticmethod
     def backward(ctx, grad_output):
-        mask, = ctx.saved_tensors
+        (mask,) = ctx.saved_tensors
         grad_input = grad_output.clone()
         grad_input[~mask] = 0
         return grad_input, None, None, None
@@ -254,13 +275,13 @@ class QConfig(object):
         with torch.no_grad():
             if self.is_symmetric:
                 # symmetric has scale based on max absolute, and 0 for zp
-                max_val = 2 ** (self.quant_bits - 1) -1
+                max_val = (2 ** (self.quant_bits - 1)) -1
                 pre_scale = torch.max(torch.abs(saturation_min), torch.abs(saturation_max))
                 scale = (pre_scale / max_val).detach().clone()
                 zero_point = torch.tensor(0, dtype=torch.int32, device=saturation_max.device)
             else:
                 # asymmetric scale and zp based on min max
-                max_val = 2 ** self.quant_bits - 1
+                max_val = (2 ** self.quant_bits) - 1
                 scale = ((saturation_max - saturation_min) / max_val).detach().clone()
                 zero_point = torch.round(saturation_min * -1 / scale)
                 zero_point = torch.clamp(zero_point, min=0, max=max_val)
@@ -336,6 +357,7 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
     set to False during testing and validation
     """
     x_transform = x.data.detach()
+    act_percentile = 99.9
 
     if is_moving_avg:
         prev_min = qconfig.prev_min
@@ -350,7 +372,7 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
             x_transform,
             prev_min,
             prev_max,
-            act_percentile=99.9,
+            act_percentile=act_percentile,
             is_symmetric=qconfig.is_symmetric,
         )
 
@@ -360,8 +382,14 @@ def quantize_activations(x, qconfig, is_moving_avg=False, fake_quantize=False):
             x_min = qconfig.prev_min.clone().to(x.device)
             x_max = qconfig.prev_max.clone().to(x.device)
         else:
-            x_min = x_transform.min()
-            x_max = x_transform.max()
+            if act_percentile>0.0:
+                x_min, x_max = get_clamped_min_max(x_transform, 0.0 if not qconfig.is_symmetric else 100 - act_percentile, act_percentile)
+                if qconfig.is_symmetric:
+                    bound = max(x_min.abs(), x_max.abs())
+                    x_min = -bound
+                    x_max = bound
+            else:
+                x_min, x_max = x_data.min(), x_data.max()
 
     x_q = qconfig.quantize_with_min_max(x, x_min, x_max, fake_quantize=fake_quantize)
     return x_q
@@ -409,7 +437,7 @@ def conv2d_uniform_quantized(module, x, a_qconfig=None, w_qconfig=None, b_qconfi
 
     is_training = module.training
     a_out_qconfig = a_qconfig.copy()
-    
+
     # fake quant the input
     x_q = quantize_activations(x, a_qconfig, is_moving_avg = is_training, fake_quantize=True)
 
@@ -420,7 +448,7 @@ def conv2d_uniform_quantized(module, x, a_qconfig=None, w_qconfig=None, b_qconfi
 
     b_q = None
     # bias scale int32
-    
+
     if module.bias is not None:
         # print(f"before bias: {module.bias}")
         if a_qconfig.prev_scale is None or w_qconfig.prev_scale is None:
@@ -436,7 +464,7 @@ def conv2d_uniform_quantized(module, x, a_qconfig=None, w_qconfig=None, b_qconfi
         b_qconfig.prev_zeropoint = 0
         # print(f"after bias: {b_q}")
         # print(f"scale: {bias_scale}")
-        
+
     else:
         b_q = None
 
